@@ -56,15 +56,6 @@ Allows the owner to add inventory for a specific T-Shirt type.
 
 Allows the owner to modify the inventory quantity of a specific T-Shirt type.
 
-## Installation and Deployment
-
-To deploy this contract, follow these steps:
-1. Clone the repository.
-2. Install dependencies using `npm install`.
-3. Compile the contracts using `npx hardhat compile`.
-4. Deploy the contract to an Ethereum network using `npx hardhat run scripts/deploy.js --network <network>`.
-
-
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
