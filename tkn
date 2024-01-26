@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "hardhat/console.sol";
+
+contract degenToken is ERC20, Ownable, ERC20Burnable {
+    event LogMessage(string message);
+
+    struct TShirt {
+        string product;
+        uint256 cost;
+        uint256 inventory;
+    }
+
+    mapping(string => TShirt) public tshirts;
+    mapping(address => uint256) public userTokenBalances;
+
+    constructor() ERC20("Degen", "DGN") Ownable(msg.sender) {
+        tshirts["Oversized"] = TShirt("Oversized", 500, 10);
+        tshirts["RoundNeck"] = TShirt("Round Neck", 1000, 20);
+        tshirts["Zip"] = TShirt("Zip", 1500, 15);
+        tshirts["Other"] = TShirt("Other", 2000, 25);
+    }
+
+    function mint(address recipientAddress, uint256 tokenAmount) public onlyOwner {
+        _mint(recipientAddress, tokenAmount);
+    }
+
+    function burn_(uint256 tokenAmount) public payable {
+        require(balanceOf(msg.sender) >= tokenAmount, "Insufficient balance to burn tokens");
+        _burn(msg.sender, tokenAmount);
+        emit LogMessage("Burned tokens");
+    }
+
+    function transfer_(address recipientAddress, uint256 tokenAmount) external {
+        require(balanceOf(msg.sender) >= tokenAmount, "Insufficient balance to transfer tokens");
+        _transfer(msg.sender, recipientAddress, tokenAmount);
+    }
+
+    function redeemTShirt(string memory tshirtType, uint256 quantity) external payable {
+        require(bytes(tshirtType).length > 0, "Invalid product type");
+        require(quantity > 0, "Quantity must be greater than zero");
+        require(balanceOf(msg.sender) >= tshirts[tshirtType].cost * quantity, "Insufficient funds to redeem T-Shirt");
+        
+        TShirt storage tshirt = tshirts[tshirtType];
+        require(tshirt.inventory >= quantity, "Insufficient T-Shirt quantity");
+
+        _burn(msg.sender, tshirt.cost * quantity);
+        userTokenBalances[msg.sender] += quantity;
+        tshirt.inventory -= quantity;
+
+        emit LogMessage("Redeemed T-Shirt");
+    }
+
+    
+    function getUserTokenBalance() external view returns (uint256) {
+        return userTokenBalances[msg.sender];
+    }
+    
+    function addTShirtQuantity(string memory tshirtType, uint256 quantity) external onlyOwner {
+        require(tshirts[tshirtType].cost != 0, "Invalid T-Shirt type");
+        tshirts[tshirtType].inventory += quantity;
+    }
+    
+    function modifyTShirtQuantity(string memory tshirtType, uint256 newQuantity) external onlyOwner {
+        require(tshirts[tshirtType].cost != 0, "Invalid T-Shirt type");
+        tshirts[tshirtType].inventory = newQuantity;
+    }
+}
